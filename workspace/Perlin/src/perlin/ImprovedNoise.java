@@ -1,14 +1,21 @@
 package perlin;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.FileImageOutputStream;
+import javax.imageio.stream.ImageOutputStream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +25,7 @@ import java.util.List;
 //JAVA REFERENCE IMPLEMENTATION OF IMPROVED NOISE - COPYRIGHT 2002 KEN PERLIN.
 
 public final class ImprovedNoise {
+public BufferedImage image;
 static public double noise(double x, double y, double z) {
    int X = (int)Math.floor(x) & 255,                  // FIND UNIT CUBE THAT
        Y = (int)Math.floor(y) & 255,                  // CONTAINS POINT.
@@ -67,24 +75,33 @@ static final int p[] = new int[512], permutation[] = { 151,160,137,91,90,15,
 };
 static { for (int i=0; i < 256 ; i++){ p[256+i] = p[i] = permutation[i];}}
 
-public void show() {
+public void show(int dimension, String mode){
 	
-	int width = 512;
-	int height = 512;
-	int depth = 512;
+	int width = 256;
+	int height = 256;
+	int depth = 256;
 	int arr2D[][] = new int[width][height];
 	int arr3D[][][] = new int [width][height][depth];
-	int dimension = 2;
 	
 	//Initialize our main image
-		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-		Graphics2D g = image.createGraphics();
-		g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
-				RenderingHints.VALUE_ALPHA_INTERPOLATION_DEFAULT);
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
+	
+	image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+	Graphics2D g = image.createGraphics();
+	g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
+			RenderingHints.VALUE_ALPHA_INTERPOLATION_DEFAULT);
+	g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+			RenderingHints.VALUE_ANTIALIAS_ON);
 		
+	if(mode=="NORMAL") {
+		System.out.println("Creating image in NORMAL mode.");
+		//black & white
+	}
+	BufferedImage[] bi = new BufferedImage[depth];
+	BufferedImage f = null;
+	BufferedImage l = null;
 	switch (dimension ) {
+	///////////////////////////////////////////////////////////////////////////
+	//case 2
 	case 2://For a 2D perlin object
 	int[] all = new int[width*height];
 	int ctr=0;
@@ -95,10 +112,10 @@ public void show() {
 			int tmp = (int) (noise(x, y, 0.0)*255);
 			//if (tmp < 0){ tmp = 0; }
 			all[ctr]=tmp;
-			tmp=tmp+107;
+			//tmp=tmp+107;
 			arr2D[i][j] = tmp;
 			
-			System.out.print(arr2D[i][j]+" ");
+			//System.out.print(arr2D[i][j]+" ");
 			ctr++;
 		}
 		System.out.println("");
@@ -118,50 +135,83 @@ public void show() {
 		}
 	}
 	break;
+	///////////////////////////////////////////////////////////////////////////
+	//case 3
 	case 3://For a 3d perlin object
+	
+	int val = 0;
 	for (int i = 0; i<width; i++){
 		for (int j = 0; j<height; j++){
 			for (int k = 0; k<depth; k++){
-				double x = (double)i/100;
-				double y = (double)j/100;
-				double z = (double)k/100;
-				int tmp = (int) (noise(x, y, z)*100);
-				//if (tmp < 0){ tmp = 0; }
-				tmp=tmp+65;
+				double x = (double)i/255;
+				double y = (double)j/255;
+				double z = (double)k/255;
+				int tmp = (int) (noise(x, y, z)*255);
+				if (tmp < 0){ tmp = 0; }
+				//tmp=tmp+255;
 				arr3D[i][j][k] = tmp;
-				//System.out.print(arr3D[i][j][k]+" ");
+
 			}
 		}
-		//System.out.println("");
+
 	}
+	
 	for (int k = 0; k<depth; k++){
 		for (int i = 0; i<width; i++){
-			for (int j = 0; j<height; j++){
-				
-				int val = arr3D[i][j][k];
-				image.setRGB(i, j, (val << 16) + (val << 8) + val);
-				
-				
+			for (int j = 0; j<height; j++){			
+				val = arr3D[i][j][k];
+				image.setRGB(i, j, (val << 16) + (val << 8) + val);		
 			}
-		}
+		}				
 		g.drawImage(image, null, 0, 0 );
-		try
-		{
-			ImageIO.write(image, "png", new File("test3D2/test3D"+k+".png"));
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+				
+		bi[k] = copyImage(image);
+		
+	}//SCOPE END FOR LOOPS
+	
+	//////////////////////////////////////////////////////////////////////////
+	//CREATE GIF
+	// grab the output image type from the first image in the sequence
+    BufferedImage firstImage = bi[0];
+
+    // create a new BufferedOutputStream with the last argument
+	ImageOutputStream output;
+	try {
+		output = new FileImageOutputStream(new File("output.gif"));
+	    // create a gif sequence with the type of the first image, 1 second
+	    // between frames, which loops continuously
+	    GifSequenceWriter writer = 
+	      new GifSequenceWriter(output, firstImage.getType(), 1, true);
+	
+	    // write out the first image to our sequence...
+	    writer.writeToSequence(firstImage);
+	    for(int i=1; i<bi.length-1; i++) {
+	      BufferedImage nextImage = bi[i];
+	      writer.writeToSequence(nextImage);
+	    }
+	
+	    writer.close();
+	    output.close();
+	} catch (FileNotFoundException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	} catch (IOException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
 	}
-	System.out.println("Successfully generated 3D perlin object.");
+	//////////////////////////////////////////////////////////////////////////
 	break;
 	default: System.out.println("Invalid Dimension");
 	break;
 	}
 	
+//	for (int i = 0; i<bi.length; i++) {
+//		try { ImageIO.write(bi[i], "png", new File("gif_testing/giftest"+i+".png")); }
+//		catch (IOException e) { e.printStackTrace(); }
+//	}
 	
+	
+
 	
 	
 	g.drawImage(image, null, 0, 0 );
@@ -177,9 +227,9 @@ public void show() {
 	}
 	
 	
-	
-	
-	
+}
+public BufferedImage getImage(){
+	return this.image;
 }
 public static int getMaxValue(int[] array) {
     int maxValue = array[0];
@@ -198,5 +248,12 @@ public static int getMinValue(int[] array) {
         }
     }
     return minValue;
+}
+public static BufferedImage copyImage(BufferedImage source){
+    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+    Graphics g = b.getGraphics();
+    g.drawImage(source, 0, 0, null);
+    g.dispose();
+    return b;
 }
 }

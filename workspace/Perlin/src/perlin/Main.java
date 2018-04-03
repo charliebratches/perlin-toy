@@ -17,12 +17,14 @@ public class Main {
 		seed = rand.nextInt((max-min)+1)+min;
 		
         System.out.println(rand);
-	    new Panel(new Perlin(1024, 1024, 4, 2.5f, 0x70, 0.9875f, 6, seed)).show();
+	    //new Panel(new Perlin(1024, 1024, 4, 2.5f, 0x70, 0.9875f, 6, seed)).show();
+        new Panel(null, null).show();
 			//new Panel().show();
         int x=0;
         int y=0;
         int z=0;
         //ImprovedNoise
-       // new ImprovedNoise().show();
+        //new ImprovedNoise().show();
 	    }
+	
 }

@@ -19,19 +19,25 @@ import java.util.Enumeration;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import com.sun.glass.events.KeyEvent;
 
 
 
 class Panel extends JPanel
 {
+	ImprovedNoise noise;
 	Perlin perlin;
 	//public JButton button;
 	public BufferedImage bi;
@@ -57,8 +63,10 @@ class Panel extends JPanel
 	
 	public int strange2 = 8;
 	
-	public Panel(Perlin perlin) {
+	
+	public Panel(Perlin perlin, ImprovedNoise noise) {
 	    this.perlin = perlin;
+	    this.noise = noise;
 	}
 	
     protected void paintComponent(Graphics g) {
@@ -66,8 +74,10 @@ class Panel extends JPanel
     	//System.out.println("Painting...");
     	BufferedImage image = null;
 
-    	image = new Perlin(512, 512, initFreq, persistency, density, cloudSharpness, detail, seed).getImage(); // get the buffered image.
-    	
+    	//image = new Perlin(512, 512, initFreq, persistency, density, cloudSharpness, detail, seed).getImage(); // get the buffered image.
+    	ImprovedNoise noise = new ImprovedNoise();
+    	noise.show(2, "NORMAL");
+    	image = noise.getImage();
 		//perlin = new Perlin(1024, 1024, 12, 1.8fx70, 0.9875f, 7, seed); //original
 		Graphics2D graphics2d = (Graphics2D) g;
         graphics2d.drawImage(image, 0, 0, null);
@@ -80,12 +90,54 @@ class Panel extends JPanel
     	JPanel mainPanel = new JPanel();
     	JPanel controls = new JPanel();
     	JPanel output = new JPanel();
+    	JPanel dimensionControls = new JPanel();
     	
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
         //frame.setLayout(new GridLayout(1,1));
         
         controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
+        dimensionControls.setLayout(new BoxLayout(dimensionControls, BoxLayout.Y_AXIS));
+        
+        /////////////////////////////////////////////////////////////////
+        //RADIO BUTTONS
+        JRadioButton button2d= new JRadioButton("2D");
+        button2d.setMnemonic(KeyEvent.VK_B);
+        button2d.setActionCommand("2D");
+        button2d.setSelected(true);
+
+        JRadioButton button3d = new JRadioButton("3D");
+        button3d.setMnemonic(KeyEvent.VK_C);
+        button3d.setActionCommand("3D");
+        button2d.setSelected(false);
+        
+        //GROUP RADIO BUTTONS
+        ButtonGroup dimensionGroup = new ButtonGroup();
+        dimensionGroup.add(button2d);
+        dimensionGroup.add(button3d);
+        
+        //ADD ACTION LISTENERS
+        button2d.addActionListener(new ActionListener()
+		{
+		    public void actionPerformed(ActionEvent e)
+		    {
+		    	System.out.println("Button 2D pressed");
+		    	new ImprovedNoise().show(2, "NORMAL");
+		    }
+		});//Reads the action.;
+        button3d.addActionListener(new ActionListener()
+		{
+		    public void actionPerformed(ActionEvent e)
+		    {
+		    	System.out.println("Button 3D pressed");
+		    	new ImprovedNoise().show(3, "NORMAL");
+		    }
+		});//Reads the action.;
+        
+        //ADD BUTTONS TO PANEL (dimensionControls)
+        dimensionControls.add(button2d);
+        dimensionControls.add(button3d);
+        /////////////////////////////////////////////////////////////////
         
         JButton button = new JButton("Generate");
         
@@ -200,7 +252,8 @@ class Panel extends JPanel
         //output.add(this);
         mainPanel.add(this);
         
-        mainPanel.add(controls);
+        //mainPanel.add(controls);
+        mainPanel.add(dimensionControls);
         
         frame.add(mainPanel);
         frame.setSize(1100, 512);
@@ -213,6 +266,7 @@ class Panel extends JPanel
         mainPanel.setVisible(true);
         output.setVisible(true);
         controls.setVisible(true);
+        dimensionControls.setVisible(true);
         
     }
     
