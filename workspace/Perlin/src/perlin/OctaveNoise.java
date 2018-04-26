@@ -24,22 +24,16 @@ import java.util.List;
 
 //JAVA REFERENCE IMPLEMENTATION OF IMPROVED NOISE - COPYRIGHT 2002 KEN PERLIN.
 
-public final class ImprovedNoise {
+public final class OctaveNoise {
 public BufferedImage image;
-public static int repeat = 8;
-//public int repeat = -1;
-//
-//public ImprovedNoise(int repeat) {
-//	this.repeat = repeat;
-//}
 
-public double noise(double x, double y, double z, int octaves, double persistence){
+public double octave(double x, double y, double z, int octaves, double persistence){
 	double total = 0;
 	double frequency = 1;
 	double amplitude = 1;
 	double maxValue = 0;			// Used for normalizing result to 0.0 - 1.0
 	for(int i=0;i<octaves;i++) {
-		total += perlin(x * frequency, y * frequency, z * frequency) * amplitude;
+		total += noise(x * frequency, y * frequency, z * frequency) * amplitude;
 		
 		maxValue += amplitude;
 		
@@ -50,12 +44,7 @@ public double noise(double x, double y, double z, int octaves, double persistenc
 	
 }
 
-static public double perlin(double x, double y, double z) {
-   if(repeat > 0) {									  // If we have any repeat on, change the coordinates to their "local" repetitions
-	   x = x%repeat;
-	   y = y%repeat;
-	   z = z%repeat;
-   }
+static public double noise(double x, double y, double z) {
    int X = (int)Math.floor(x) & 255,                  // FIND UNIT CUBE THAT
        Y = (int)Math.floor(y) & 255,                  // CONTAINS POINT.
        Z = (int)Math.floor(z) & 255;
@@ -65,32 +54,17 @@ static public double perlin(double x, double y, double z) {
    double u = fade(x),                                // COMPUTE FADE CURVES
           v = fade(y),                                // FOR EACH OF X,Y,Z.
           w = fade(z);
-//   int A = p[X  ]+Y, AA = p[A]+Z, AB = p[A+1]+Z,      // HASH COORDINATES OF
-//       B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;      // THE 8 CUBE CORNERS,
-	int aaa, aba, aab, abb, baa, bba, bab, bbb;
-	aaa = p[p[p[    X ]+    Y ]+    Z ];
-	aba = p[p[p[    X ]+inc(Y)]+    Z ];
-	aab = p[p[p[    X ]+    Y ]+inc(Z)];
-	abb = p[p[p[    X ]+inc(Y)]+inc(Z)];
-	baa = p[p[p[inc(X)]+    Y ]+    Z ];
-	bba = p[p[p[inc(X)]+inc(Y)]+    Z ];
-	bab = p[p[p[inc(X)]+    Y ]+inc(Z)];
-	bbb = p[p[p[inc(X)]+inc(Y)]+inc(Z)];
+   int A = p[X  ]+Y, AA = p[A]+Z, AB = p[A+1]+Z,      // HASH COORDINATES OF
+       B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;      // THE 8 CUBE CORNERS,
 
-   return lerp(w, lerp(v, lerp(u, grad(p[aaa  ], x  , y  , z   ),  // AND ADD
-                                  grad(p[baa  ], x-1, y  , z   )), // BLENDED
-                          lerp(u, grad(p[aba  ], x  , y-1, z   ),  // RESULTS
-                                  grad(p[bba  ], x-1, y-1, z   ))),// FROM  8
-                  lerp(v, lerp(u, grad(p[aab], x  , y  , z-1 ),  // CORNERS
-                                  grad(p[bab], x-1, y  , z-1 )), // OF CUBE
-                          lerp(u, grad(p[abb], x  , y-1, z-1 ),
-                                  grad(p[bbb], x-1, y-1, z-1 ))));
-}
-public static int inc(int num) {
-	num++;
-	if (repeat > 0) num %= repeat;
-	
-	return num;
+   return lerp(w, lerp(v, lerp(u, grad(p[AA  ], x  , y  , z   ),  // AND ADD
+                                  grad(p[BA  ], x-1, y  , z   )), // BLENDED
+                          lerp(u, grad(p[AB  ], x  , y-1, z   ),  // RESULTS
+                                  grad(p[BB  ], x-1, y-1, z   ))),// FROM  8
+                  lerp(v, lerp(u, grad(p[AA+1], x  , y  , z-1 ),  // CORNERS
+                                  grad(p[BA+1], x-1, y  , z-1 )), // OF CUBE
+                          lerp(u, grad(p[AB+1], x  , y-1, z-1 ),
+                                  grad(p[BB+1], x-1, y-1, z-1 ))));
 }
 static double fade(double t) { return t * t * t * (t * (t * 6 - 15) + 10); }
 static double lerp(double t, double a, double b) { 
@@ -119,10 +93,4 @@ static final int p[] = new int[512], permutation[] = { 151,160,137,91,90,15,
 };
 static { for (int i=0; i < 256 ; i++){ p[256+i] = p[i] = permutation[i];}}
 
-public void show(int dimension, String mode){
-	
-	ImagePainter ip = new ImagePainter();
-	
-	//ip.createImage(dimension, mode, 512, 512, 512, this);
-}
 }

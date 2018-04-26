@@ -26,12 +26,13 @@ import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.sun.glass.events.KeyEvent;
+//import com.sun.glass.events.KeyEvent;
 
 
 
@@ -63,6 +64,8 @@ class Panel extends JPanel
 	
 	public int strange2 = 8;
 	
+	public int lineSpacing = 4;
+	
 	
 	public Panel(Perlin perlin, ImprovedNoise noise) {
 	    this.perlin = perlin;
@@ -76,8 +79,8 @@ class Panel extends JPanel
 
     	//image = new Perlin(512, 512, initFreq, persistency, density, cloudSharpness, detail, seed).getImage(); // get the buffered image.
     	ImprovedNoise noise = new ImprovedNoise();
-    	noise.show(2, "NORMAL");
-    	image = noise.getImage();
+    	noise.show(2, "LINES");
+    	//image = noise.getImage();
 		//perlin = new Perlin(1024, 1024, 12, 1.8fx70, 0.9875f, 7, seed); //original
 		Graphics2D graphics2d = (Graphics2D) g;
         graphics2d.drawImage(image, 0, 0, null);
@@ -102,12 +105,12 @@ class Panel extends JPanel
         /////////////////////////////////////////////////////////////////
         //RADIO BUTTONS
         JRadioButton button2d= new JRadioButton("2D");
-        button2d.setMnemonic(KeyEvent.VK_B);
+        //button2d.setMnemonic(KeyEvent.VK_B);
         button2d.setActionCommand("2D");
         button2d.setSelected(true);
 
         JRadioButton button3d = new JRadioButton("3D");
-        button3d.setMnemonic(KeyEvent.VK_C);
+        //button3d.setMnemonic(KeyEvent.VK_C);
         button3d.setActionCommand("3D");
         button2d.setSelected(false);
         
@@ -122,7 +125,8 @@ class Panel extends JPanel
 		    public void actionPerformed(ActionEvent e)
 		    {
 		    	System.out.println("Button 2D pressed");
-		    	new ImprovedNoise().show(2, "NORMAL");
+		    	new ImprovedNoise().show(2, "LINES");
+		    	//noise.show(2, "LINES");
 		    }
 		});//Reads the action.;
         button3d.addActionListener(new ActionListener()
@@ -130,13 +134,15 @@ class Panel extends JPanel
 		    public void actionPerformed(ActionEvent e)
 		    {
 		    	System.out.println("Button 3D pressed");
-		    	new ImprovedNoise().show(3, "NORMAL");
+		        new ImprovedNoise().show(3, "LINES");
+		    	//noise.show(3, "LINES");
 		    }
 		});//Reads the action.;
         
         //ADD BUTTONS TO PANEL (dimensionControls)
         dimensionControls.add(button2d);
         dimensionControls.add(button3d);
+        
         /////////////////////////////////////////////////////////////////
         
         JButton button = new JButton("Generate");
@@ -166,6 +172,18 @@ class Panel extends JPanel
         detailSlider.setMajorTickSpacing(1);
         detailSlider.setPaintTicks(true);
         detailSlider.setPaintLabels(true);
+        
+        /*Line Spacing Slider*/
+        JSlider lineSlider = addSlider(controls, 4, 16, 4, 1, "lineSpacing");
+        lineSlider.setMajorTickSpacing(1);
+        lineSlider.setMajorTickSpacing(1);
+        lineSlider.setPaintTicks(true);
+      //  lineSlider.setPaintLabels(true);
+        
+        /*Progress Bar*/
+//        JProgressBar progressBar = new JProgressBar(0, task.getLengthOfTask());
+//        progressBar.setValue(0);
+//        progressBar.setStringPainted(true);
         
         //
         Dictionary dictionary = detailSlider.getLabelTable();
@@ -236,6 +254,16 @@ class Panel extends JPanel
                 repaint();
             }
         });
+        lineSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent ce) {
+        
+                lineSpacing = lineSlider.getValue();
+                //noise.show(2, "LINES", lineSpacing);
+                //new ImprovedNoise().show(2, "LINES", lineSpacing);
+                new ImprovedNoise().show(2, "LINES");
+            }
+        });
         
         controls.add(button);
         
@@ -254,6 +282,7 @@ class Panel extends JPanel
         
         //mainPanel.add(controls);
         mainPanel.add(dimensionControls);
+        //mainPanel.add(lineSlider);
         
         frame.add(mainPanel);
         frame.setSize(1100, 512);
